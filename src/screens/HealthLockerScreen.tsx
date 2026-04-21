@@ -1,37 +1,74 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { COLORS, SPACING, ROUNDING } from '../constants/Theme';
-import { FileX, ArrowLeft } from 'lucide-react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { COLORS, SPACING, ROUNDING, SHADOWS } from '../constants/Theme';
+import { FileX, ArrowLeft, Stethoscope, ChevronRight } from 'lucide-react-native';
+import { getVisits, getActiveProfile } from '../utils/storage';
+import { Visit } from '../types';
 
 const HealthLockerScreen = ({ navigation }: any) => {
+  const [visits, setVisits] = useState<Visit[]>([]);
+
+  useEffect(() => {
+    const loadData = async () => {
+      const active = await getActiveProfile();
+      const history = await getVisits();
+
+      // Filter visits for the active user exactly like the home screen
+      const userHistory = history.filter(v =>
+        (active?.abhaNumber && v.abhaNumber === active.abhaNumber) ||
+        (v.patientName === active?.fullName)
+      );
+
+      setVisits(userHistory);
+    };
+
+    const unsubscribe = navigation.addListener('focus', loadData);
+    loadData();
+    return unsubscribe;
+  }, [navigation]);
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 4 }}>
           <ArrowLeft size={24} color={COLORS.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Health Locker</Text>
-        <View style={{ width: 24 }} />
+        <Text style={styles.headerTitle}>Full Hospital History</Text>
+        <View style={{ width: 32 }} />
       </View>
 
-      <View style={styles.content}>
-        <View style={styles.emptyContainer}>
-          <View style={styles.iconCircle}>
-            <FileX size={60} color={COLORS.textMuted} strokeWidth={1.5} />
+      {visits.length === 0 ? (
+        <View style={styles.content}>
+          <View style={styles.emptyContainer}>
+            <View style={styles.iconCircle}>
+              <FileX size={60} color={COLORS.textMuted} strokeWidth={1.5} />
+            </View>
+            <Text style={styles.title}>No Records Found</Text>
+            <Text style={styles.subtitle}>
+              Your generated tokens will appear here once you visit a hospital.
+            </Text>
           </View>
-          <Text style={styles.title}>No Records Found</Text>
-          <Text style={styles.subtitle}>
-            Your medical records and prescriptions will appear here once you share them from a hospital.
-          </Text>
         </View>
-
-        <TouchableOpacity 
-          style={styles.button}
-          onPress={() => navigation.goBack()}
-        >
-          <Text style={styles.buttonText}>Go Back</Text>
-        </TouchableOpacity>
-      </View>
+      ) : (
+        <ScrollView style={styles.listContainer} showsVerticalScrollIndicator={false}>
+          {visits.map((visit) => (
+             <TouchableOpacity key={visit.id} style={[styles.visitCard, SHADOWS.sm]}>
+               <View style={styles.visitIcon}>
+                 <Stethoscope size={20} color={COLORS.primary} />
+               </View>
+               <View style={styles.visitMain}>
+                 <Text style={styles.hospitalText}>{visit.hospitalName}</Text>
+                 <Text style={styles.visitMeta}>{visit.date} • {visit.counterId}</Text>
+               </View>
+               <View style={styles.tokenBadge}>
+                 <Text style={styles.tokenLabel}>Token</Text>
+                 <Text style={styles.tokenNumber}>{visit.tokenNumber}</Text>
+               </View>
+             </TouchableOpacity>
+          ))}
+          <View style={{ height: 40 }} />
+        </ScrollView>
+      )}
     </View>
   );
 };
@@ -39,7 +76,7 @@ const HealthLockerScreen = ({ navigation }: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.surface,
+    backgroundColor: '#F8FAFC',
   },
   header: {
     flexDirection: 'row',
@@ -48,12 +85,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.lg,
     paddingTop: 60,
     paddingBottom: SPACING.md,
+    backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: '800',
     color: COLORS.text,
   },
   content: {
@@ -61,6 +99,9 @@ const styles = StyleSheet.create({
     padding: SPACING.xl,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  listContainer: {
+    padding: SPACING.lg,
   },
   emptyContainer: {
     alignItems: 'center',
@@ -70,7 +111,7 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: COLORS.background,
+    backgroundColor: '#E2E8F0',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: SPACING.xl,
@@ -88,16 +129,58 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     paddingHorizontal: SPACING.md,
   },
-  button: {
-    backgroundColor: COLORS.primary,
-    paddingHorizontal: SPACING.xxl,
-    paddingVertical: SPACING.md,
-    borderRadius: ROUNDING.md,
+  visitCard: {
+    flexDirection: 'row',
+    backgroundColor: '#fff',
+    padding: 16,
+    borderRadius: 20,
+    marginBottom: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
-  buttonText: {
-    color: COLORS.surface,
+  visitIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    backgroundColor: 'rgba(43, 103, 246, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 14,
+  },
+  visitMain: {
+    flex: 1,
+  },
+  hospitalText: {
     fontSize: 16,
+    fontWeight: '800',
+    color: COLORS.text,
+    marginBottom: 4,
+  },
+  visitMeta: {
+    fontSize: 12,
+    color: COLORS.textMuted,
+    fontWeight: '600',
+  },
+  tokenBadge: {
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  tokenLabel: {
+    fontSize: 10,
+    color: COLORS.textMuted,
     fontWeight: '700',
+    marginBottom: 2,
+  },
+  tokenNumber: {
+    fontSize: 18,
+    fontWeight: '900',
+    color: COLORS.primary,
   },
 });
 

@@ -49,7 +49,7 @@ const HomeScreen = ({ navigation }: any) => {
 
       setTotalVisits(userHistory.length);
       setTodayTokens(currentTokens);
-      setVisits(userHistory.slice(0, 3)); // Show top 3 in the preview list
+      setVisits(userHistory.slice(0, 2));
     };
 
     const unsubscribe = navigation.addListener('focus', loadData);
@@ -108,27 +108,15 @@ const HomeScreen = ({ navigation }: any) => {
 
         {/* QUICK ACTIONS - Useful shortcuts */}
         <View style={styles.statsRow}>
-          <TouchableOpacity style={[styles.statItem, SHADOWS.sm, { borderColor: 'rgba(43, 103, 246, 0.1)' }]} onPress={() => navigation.navigate('HealthLocker')}>
+          <View style={[styles.statItem, SHADOWS.sm, { borderColor: 'rgba(43, 103, 246, 0.1)' }]}>
             <View style={[styles.statIcon, { backgroundColor: 'rgba(43, 103, 246, 0.1)' }]}>
-              <History size={16} color={COLORS.primary} />
+              <Activity size={18} color={COLORS.primary} />
             </View>
-            <Text style={[styles.statVal, { color: COLORS.primary }]}>Records</Text>
-            <Text style={styles.statLabel}>Health Locker</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.statItem, SHADOWS.sm, { borderColor: 'rgba(16, 185, 129, 0.1)' }]}>
-            <View style={[styles.statIcon, { backgroundColor: 'rgba(16, 185, 129, 0.1)' }]}>
-              <ShieldCheck size={16} color="#10B981" />
+            <View style={styles.statTextContainer}>
+              <Text style={styles.statLabel}>Total Tokens Generated</Text>
+              <Text style={[styles.statVal, { color: COLORS.primary }]}>{totalVisits}</Text>
             </View>
-            <Text style={[styles.statVal, { color: '#10B981', fontSize: 12 }]}>{activeUser?.abhaNumber ? '✓ Linked' : 'Not Set'}</Text>
-            <Text style={styles.statLabel}>ABHA ID</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.statItem, SHADOWS.sm, { borderColor: 'rgba(139, 92, 246, 0.1)' }]} onPress={() => navigation.navigate('SelectProfile')}>
-            <View style={[styles.statIcon, { backgroundColor: 'rgba(139, 92, 246, 0.1)' }]}>
-              <Users size={16} color="#8B5CF6" />
-            </View>
-            <Text style={[styles.statVal, { color: '#8B5CF6' }]}>{profiles.length}</Text>
-            <Text style={styles.statLabel}>Family</Text>
-          </TouchableOpacity>
+          </View>
         </View>
 
         {/* SCAN QR - FULL WIDTH */}
@@ -331,30 +319,37 @@ const styles = StyleSheet.create({
   statItem: {
     flex: 1,
     backgroundColor: '#fff',
-    padding: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     borderRadius: 20,
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: 12,
     borderWidth: 1,
     borderColor: COLORS.border,
   },
   statIcon: {
-    width: 30,
-    height: 30,
+    width: 36,
+    height: 36,
     borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 6,
+  },
+  statTextContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   statVal: {
-    fontSize: 15,
+    fontSize: 18,
     fontWeight: '900',
     color: COLORS.secondary,
   },
   statLabel: {
-    fontSize: 11,
+    fontSize: 13,
     color: COLORS.textMuted,
     fontWeight: '700',
-    marginTop: 2,
   },
   heroDoctorRow: {
     flexDirection: 'row',
